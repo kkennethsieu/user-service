@@ -6,10 +6,11 @@ import db from "./db/db.js";
 
 
 const app = express();
-app.use("/auth", router);
 
 app.use(express.json());
 app.use(cookieParser());
+
+app.use("/auth", userRoutes);
 
 const PORT = 3000;
 
