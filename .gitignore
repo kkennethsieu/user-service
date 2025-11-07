@@ -1,8 +1,21 @@
-# Python
-venv/
-__pycache__/
-*.pyc
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# SQLite database
+mydb.sqlite
+
+# Environment files (if you add .env later)
 .env
 
-# VS Code
+# OS files
+.DS_Store
+
+# VS Code settings
 .vscode/
