@@ -6,6 +6,10 @@ try {
   db.prepare(
     "CREATE TABLE IF NOT EXISTS users (userId INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, phoneNumber TEXT NOT NULL, createdAt TEXT DEFAULT CURRENT_TIMESTAMP, updatedAt TEXT DEFAULT CURRENT_TIMESTAMPS )"
   ).run();
+
+  // db.exec(
+  //   "INSERT into users (username, password, phoneNumber) VALUES ('testuser', 'password123', '123-456-7890');"
+  // );
 } catch (error) {
   console.error("Error creating users table:", error);
 }

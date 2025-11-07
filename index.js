@@ -1,9 +1,12 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import router from "./routes/userRoutes.js";
 import cors from "cors";
 import db from "./db/db.js";
 
+
 const app = express();
+app.use("/auth", router);
 
 app.use(express.json());
 app.use(cookieParser());
