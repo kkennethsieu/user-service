@@ -1,5 +1,7 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
+import db from "./db/db.js";
 
 const app = express();
 
