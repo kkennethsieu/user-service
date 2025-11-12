@@ -1,19 +1,5 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-<<<<<<< Updated upstream
-dotenv.config();
-
-// Louie
-export const createUser = (
-  mfatoken,
-  username,
-  password,
-  phoneNumber,
-  profile = null
-) => {
-  if (mfatoken !== process.env.MFA_TOKEN) {
-    throw new Error("Invalid MFA token");
-=======
 import db from "../db/db.js";
 import { createTokens } from "../utils/createTokens.js";
 import bcrypt from "bcryptjs";
@@ -70,9 +56,26 @@ export const createUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: "Invalid request" });
->>>>>>> Stashed changes
   }
 };
+
+// MFA Check needs to receive 
+export const MFACheck = async (req, res) => {
+  const userVal = req.body;
+
+  try {
+    const row = db.prepare('SELECT 1 FROM Users WHERE mfaToken = ? LIMIT 1').get(userVal);
+    if (row) {
+      console.log("MFA verified");
+      db.prepare("UPDATE users SET mfaToken = NULL WHERE mfaToken = ?").run(userVal);
+    } else {
+      console.log("MFA failed, deleting user");
+      db.prepare("DELETE FROM users WHERE mfaToken = ?").run(userVal);
+    }
+  } catch(error) {
+    res.status(400).json({ error: "Invalid request"})
+  }
+}
 
 export const getUser = async (req, res) => {
   const params = req.query;
@@ -91,10 +94,6 @@ export const getUser = async (req, res) => {
 
 // Will
 export const updateUser = (userId, newDetails) => {};
-
-const profilVerify = (profile) => {
-  return profile.bio && profile.favGame && profile.urlPic;
-};
 
 // Kenneth
 export const login = async (req, res) => {
@@ -169,7 +168,7 @@ export const refreshToken = async (req, res) => {
 };
 
 // Kenneth
-export const logout = (req, res) => {
+export const logout = (res) => {
   // reset the cookie to nothing
   res.cookie("refreshToken", "", {
     httpOnly: true,
