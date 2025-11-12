@@ -2,18 +2,25 @@ import db from "../db/db.js";
 import dotenv from "dotenv";
 import { createTokens } from "../utils/createTokens.js";
 import jwt from "jsonwebtoken";
+import { createUser, updateUser, getUserById } from "../models/userModel.js";
 dotenv.config();
 
 // Louie
-export const createUser = (
-  mfatoken,
-  username,
-  password,
-  phoneNumber,
-  profile = null
-) => {
+export const createUser = async ( mfatoken, req, res ) => {
   if (mfatoken !== process.env.MFA_TOKEN) {
     throw new Error("Invalid MFA token");
+  }
+  try {
+    // turn request body into variables
+    const { username, password, phoneNumber, profile = null } = req.body;
+
+    // make new user
+    const newUser = await createUser(mfatoken, username, password, phoneNumber, profile);
+
+    // get result
+    res.status(201).json(newUser);
+  } catch(error) {
+    res.status(400).json({"Error": "Invalid request"})
   }
 };
 
