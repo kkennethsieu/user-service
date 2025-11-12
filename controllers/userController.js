@@ -79,18 +79,6 @@ export const MFACheck = async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: "Invalid request" });
   }
-  try {
-    // turn request body into variables
-    const { username, password, phoneNumber, profile = null } = req.body;
-
-    // make new user
-    const newUser = await createUser(mfatoken, username, password, phoneNumber, profile);
-
-    // get result
-    res.status(201).json(newUser);
-  } catch(error) {
-    res.status(400).json({"Error": "Invalid request"})
-  }
 };
 
 export const getUser = async (req, res) => {
@@ -123,7 +111,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
     // we want to compare the password if it is correct
-    const passwordMatch = bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
