@@ -645,3 +645,8 @@ REFRESH_TOKEN_SECRET=your-secret-key-for-refresh-tokens
 - Use the same `ACCESS_TOKEN_SECRET` across all microservices that need to verify tokens
 
 ---
+## UML Diagram (createUser endpoint)
+![UML Diagram](./images/UML-createUser.png)
+This diagram shows the gist of how the createUser endpoint works. It requires the user to supply their intended username, their password (will be hashed when it hits the database), and their phone number.
+Once the user is created, MFA check triggers, sending a randomly generated MFA token, the user's phoneNumber, and their userId to the client. If the user inputs the MFA token correctly, user row stays, else delete.
+If MFACheck passes, route user to user profile page.
