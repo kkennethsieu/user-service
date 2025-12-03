@@ -11,6 +11,10 @@ import {
 
 const router = express.Router();
 
+router.get("/", (req, res) => {
+  res.json("Auth microservice is running");
+});
+
 router.get("/user/:userId", getUser);
 
 router.post("/createUser", createUser);

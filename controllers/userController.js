@@ -5,10 +5,28 @@ import { createTokens } from "../utils/createTokens.js";
 import bcrypt from "bcryptjs";
 dotenv.config();
 
+const avatars = [
+  {
+    avatarURL: "https://cdn-icons-png.flaticon.com/512/4140/4140048.png",
+  },
+  {
+    avatarURL: "https://cdn-icons-png.flaticon.com/512/9131/9131529.png",
+  },
+  {
+    avatarURL: "https://cdn-icons-png.flaticon.com/512/921/921347.png",
+  },
+  {
+    avatarURL: "https://cdn-icons-png.flaticon.com/512/3177/3177440.png",
+  },
+  {
+    avatarURL: "https://cdn-icons-png.flaticon.com/512/2922/2922510.png",
+  },
+];
+
+const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 // Louie
 export const createUser = async (req, res) => {
   try {
-    // turn request body into variables
     const { username, password, phoneNumber } = req.body;
 
     // check if the username is there
@@ -26,26 +44,24 @@ export const createUser = async (req, res) => {
 
     // make new user
     const stmt2 = db.prepare(
-      "INSERT INTO users (username, password, phoneNumber, mfaToken) VALUES (?,?,?,?)"
+      "INSERT INTO users (username, password, phoneNumber,avatarUrl, mfaToken) VALUES (?,?,?,?)"
     );
 
-    const info = stmt2.run(username, hashedPassword, phoneNumber, mfaToken);
+    const info = stmt2.run(
+      username,
+      hashedPassword,
+      phoneNumber,
+      randomAvatar,
+      mfaToken
+    );
 
     const userId = info.lastInsertRowid;
 
-    const { accessToken, refreshToken } = createTokens({ userId });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false, //for dev = false, for production = true
-      sameSite: "Strict", // will only send to the same site that requested it
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
     res.status(201).json({
-      accessToken,
+      message: "User created, verify MFA",
       user: {
         userId,
+        username,
         phoneNumber,
         mfaToken,
       },
@@ -58,22 +74,37 @@ export const createUser = async (req, res) => {
 
 // MFA Check needs to receive
 export const MFACheck = async (req, res) => {
-  const userVal = req.body.mfaInput;
-  const realToken = req.body.mfaToken;
+  const { mfaInput, mfaToken } = req.body;
 
   try {
-    const row = db
-      .prepare("SELECT 1 FROM Users WHERE mfaToken = ? LIMIT 1")
-      .get(userVal);
-    if (row) {
+    const user = db
+      .prepare("SELECT * FROM users WHERE mfaToken = ? LIMIT 1")
+      .get(mfaInput);
+
+    if (user) {
       console.log("MFA verified");
+
       db.prepare("UPDATE users SET mfaToken = NULL WHERE mfaToken = ?").run(
-        realToken
+        mfaToken
       );
-      res.status(201).json({ message: "MFA Verified" });
+
+      const { accessToken, refreshToken } = createTokens(user);
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.status(201).json({
+        message: "MFA Verified",
+        accessToken,
+        user: { ...user, password: undefined },
+      });
     } else {
       console.log("MFA failed, deleting user");
-      db.prepare("DELETE FROM users WHERE mfaToken = ?").run(realToken);
+      db.prepare("DELETE FROM users WHERE mfaToken = ?").run(mfaToken);
       res.status(400).json({ error: "MFA Failed" });
     }
   } catch (error) {
@@ -88,11 +119,13 @@ export const getUser = async (req, res) => {
     const stmt = db.prepare(
       "SELECT username, avatarURL, phoneNumber, userBio FROM users WHERE userId = ?"
     );
-    console.log("Fetching user with ID:", userId);
-    await res.json(stmt.get(userId));
+    const user = stmt.get(userId); // synchronous call
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    return res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(404).json({ error: "User not found" });
+    return res.status(500).json({ error: "Something went wrong" });
   }
 };
 
@@ -136,7 +169,7 @@ export const login = async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false, //for dev = false, for production = true
-      sameSite: "Strict", // will only send to the same site that requested it
+      sameSite: "Lax", // will only send to the same site that requested it
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -178,7 +211,7 @@ export const refreshToken = async (req, res) => {
     res.cookie("refreshToken", "", {
       httpOnly: true,
       secure: false,
-      sameSite: "Strict",
+      sameSite: "Lax",
       maxAge: 0,
     });
     return res.status(401).json({ error: "invalid or expired refresh token" });
@@ -191,7 +224,7 @@ export const logout = (req, res) => {
   res.cookie("refreshToken", " ", {
     httpOnly: true,
     secure: false,
-    sameSite: "Strict",
+    sameSite: "Lax",
     maxAge: 0,
   });
   return res.json({ message: "Logged out successfully" });
