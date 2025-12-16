@@ -1,6 +1,6 @@
 import request from "supertest";
-import app from "../../app.js";
-import db from "../../db/db.js";
+import app from "../../src/app.js";
+import db from "../../src/db/db.js";
 
 // Helper function to create a user in DB
 
