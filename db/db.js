@@ -1,13 +1,26 @@
 import Database from "better-sqlite3";
 
-const db = new Database("./db/mydb.db");
+let db;
 
 try {
+  if (process.env.NODE_ENV === "test") {
+    db = new Database(":memory:"); // in-memory DB for tests
+  } else {
+    db = new Database("./db/mydb.db");
+  }
   db.prepare(
+<<<<<<< Updated upstream
     "CREATE TABLE IF NOT EXISTS users (userId INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, phoneNumber TEXT NOT NULL, avatarURL TEXT DEFAULT 'https://cdn-icons-png.flaticon.com/512/149/149071.png', userBio TEXT , mfaToken TEXT, createdAt TEXT DEFAULT CURRENT_TIMESTAMP, updatedAt TEXT DEFAULT CURRENT_TIMESTAMP )"
   ).run();
   // db.exec("DROP TABLE users");
   // db.exec("DELETE FROM users where userId = 17");
+=======
+    "CREATE TABLE IF NOT EXISTS users (userId INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, phoneNumber TEXT NOT NULL, avatarURL TEXT DEFAULT 'https://www.freeiconspng.com/img/898', userBio TEXT , mfaToken INT, createdAt TEXT DEFAULT CURRENT_TIMESTAMP, updatedAt TEXT DEFAULT CURRENT_TIMESTAMP )"
+  ).run();
+
+  // db.exec("DROP TABLE users");
+
+>>>>>>> Stashed changes
   // db.exec(
   //   "INSERT into users (username, password, phoneNumber) VALUES ('testuser', 'password123', '123-456-7890');"
   // );

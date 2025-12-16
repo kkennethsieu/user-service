@@ -1,0 +1,61 @@
+name: CI - user-service
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-build-test-push-ecr:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+    steps:
+      # 1. Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Run tests on host
+      - name: Run tests
+        run: npm test
+
+      # 5. Configure AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 6. Login to PUBLIC ECR
+      - name: Login to Amazon ECR Public
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      # 7. Build Docker image
+      - name: Build Docker image
+        run: |
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:pr-${{ github.event.pull_request.number }}
+
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          docker build -t $IMAGE_URI .
+
+      # 8. Run tests inside Docker container
+      - name: Run tests inside Docker
+        run: docker run --rm $IMAGE_URI npm test
+
+      # 9. Push Docker image to ECR
+      - name: Push Docker image
+        run: docker push $IMAGE_URI

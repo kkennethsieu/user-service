@@ -26,7 +26,15 @@ const avatars = [
 const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 // Louie
 export const createUser = async (req, res) => {
+<<<<<<< Updated upstream
   try {
+=======
+  // if (mfatoken !== process.env.MFA_TOKEN) {
+  //   throw new Error("Invalid MFA token");
+  // }
+  try {
+    // turn request body into variables
+>>>>>>> Stashed changes
     const { username, password, phoneNumber } = req.body;
 
     // check if the username is there
@@ -44,6 +52,7 @@ export const createUser = async (req, res) => {
 
     // make new user
     const stmt2 = db.prepare(
+<<<<<<< Updated upstream
       "INSERT INTO users (username, password, phoneNumber,avatarUrl, mfaToken) VALUES (?,?,?,?)"
     );
 
@@ -62,6 +71,28 @@ export const createUser = async (req, res) => {
       user: {
         userId,
         username,
+=======
+      "INSERT INTO users (username, password, phoneNumber, mfaToken) VALUES (?,?,?,?)"
+    );
+
+    const info = stmt2.run(username, hashedPassword, phoneNumber, mfaToken);
+
+    const userId = info.lastInsertRowid;
+
+    const { accessToken, refreshToken } = createTokens({ userId });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, //for dev = false, for production = true
+      sameSite: "Strict", // will only send to the same site that requested it
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(201).json({
+      accessToken,
+      user: {
+        userId,
+>>>>>>> Stashed changes
         phoneNumber,
         mfaToken,
       },
@@ -69,6 +100,7 @@ export const createUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: "Invalid request" });
+<<<<<<< Updated upstream
   }
 };
 
@@ -109,6 +141,8 @@ export const MFACheck = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ error: "Invalid request" });
+=======
+>>>>>>> Stashed changes
   }
 };
 
@@ -123,7 +157,7 @@ export const getUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    return res.json(user);
+    return res.status(201).json(user);
   } catch (err) {
     return res.status(500).json({ error: "Something went wrong" });
   }
@@ -158,7 +192,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
     // we want to compare the password if it is correct
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = bcrypt.compare(password, 10, user.password);
     if (!passwordMatch) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
