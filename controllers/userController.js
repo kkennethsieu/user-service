@@ -123,7 +123,7 @@ export const getUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    return res.json(user);
+    return res.status(201).json(user);
   } catch (err) {
     return res.status(500).json({ error: "Something went wrong" });
   }
