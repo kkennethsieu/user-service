@@ -60,7 +60,7 @@ jobs:
 
       # 8. Run tests inside Docker container
       - name: Run tests inside Docker
-        run: docker run --rm $IMAGE_URI npm test
+        run: docker run --rm $IMAGE_URI sh -c "npm test"
 
       # 9. Push Docker image to ECR
       - name: Push Docker image
