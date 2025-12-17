@@ -50,10 +50,15 @@ jobs:
       # 7. Build Docker image
       - name: Build Docker image
         run: |
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:pr-${{ github.event.pull_request.number }}
+          # PR-specific tag
+          PR_TAG=pr-${{ github.event.pull_request.number }}
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:pr-$PR_TAG
 
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
           docker build -t $IMAGE_URI .
+
+          # Also tag as latest
+          docker tag $IMAGE_URI ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
 
       # 8. Run tests inside Docker container
       - name: Run tests inside Docker
@@ -61,4 +66,6 @@ jobs:
 
       # 9. Push Docker image to ECR
       - name: Push Docker image
-        run: docker push $IMAGE_URI
+        run: |
+          docker push $IMAGE_URI
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
